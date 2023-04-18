@@ -1,0 +1,3 @@
+displayName = Tides of Time
+author = The Team
+version = 0.1
