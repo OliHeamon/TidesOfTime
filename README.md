@@ -6,4 +6,4 @@ All code here is licensed under the AGPL v3 license. This license permits the us
 
 View the full license [here](LICENSE.txt).
 
-Do not post the any compiled copies of this work on Steam, modified or not.
+Do not post any compiled copies of this work on Steam, modified or not.
