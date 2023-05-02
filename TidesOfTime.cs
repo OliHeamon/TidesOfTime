@@ -13,9 +13,5 @@ namespace TidesOfTime
 
             return new TidesOfTimeContentSource(file);
         }
-
-        public override void Load()
-        {
-        }
     }
 }

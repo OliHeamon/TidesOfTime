@@ -1,6 +1,10 @@
 Items: {
 	ArcWrench: {
 		DisplayName: Arc Wrench
-		Tooltip: ""
+		Tooltip:
+			'''
+			Summons a tesla coil to fry enemies in a large area
+			Multiple tesla coils can arc to each other to increase their range and damage
+			'''
 	}
 }
