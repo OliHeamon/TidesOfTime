@@ -6,7 +6,7 @@ using Terraria.ModLoader;
 
 namespace TidesOfTime.Content.Items.Abstract
 {
-    public abstract class AnimatedInventoryItem : TexturedItem
+    public abstract class AnimatedInventoryItem : ModItem
     {
         public abstract int FrameCount { get; }
 
