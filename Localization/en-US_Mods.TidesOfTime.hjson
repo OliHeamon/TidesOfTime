@@ -1,0 +1,6 @@
+Items: {
+	ArcWrench: {
+		DisplayName: Arc Wrench
+		Tooltip: ""
+	}
+}
