@@ -3,8 +3,10 @@ using Microsoft.Xna.Framework.Graphics;
 using ReLogic.Content;
 using Terraria;
 using Terraria.DataStructures;
+using Terraria.Graphics.Effects;
 using Terraria.ID;
 using Terraria.ModLoader;
+using TidesOfTime.Common.Rendering;
 
 namespace TidesOfTime.Content.Projectiles.Misc
 {
@@ -24,11 +26,15 @@ namespace TidesOfTime.Content.Projectiles.Misc
 
         private readonly Texture2D activeTexture;
 
+        private readonly Trail lightningTrail;
+
         public TeslaCoil()
         {
             if (!Main.dedServ)
             {
                 activeTexture = ModContent.Request<Texture2D>($"{Texture}_Active", AssetRequestMode.ImmediateLoad).Value;
+
+                lightningTrail = new Trail(Main.graphics.GraphicsDevice, 48, new NoTip(), factor => 16, texCoords => Color.White);
             }
         }
 
@@ -92,6 +98,24 @@ namespace TidesOfTime.Content.Projectiles.Misc
 
                 Projectile.netUpdate = true;
             }
+
+            if (!Main.dedServ)
+            {
+                ManageTrail();
+            }
+        }
+
+        private void ManageTrail()
+        {
+            Vector2[] vectors = new Vector2[48];
+
+            for (int i = 0; i < 48; i++)
+            {
+                vectors[i] = Projectile.Center + new Vector2(i * 16, 0);
+            }
+
+            lightningTrail.Positions = vectors;
+            lightningTrail.NextPosition = Projectile.Center + new Vector2(49 * 16, 0);
         }
 
         public override bool PreDraw(ref Color lightColor)
@@ -108,7 +132,22 @@ namespace TidesOfTime.Content.Projectiles.Misc
 
         public override void PostDraw(Color lightColor)
         {
-            base.PostDraw(lightColor);
+            if (Target != -1)
+            {
+                Main.spriteBatch.End();
+
+                Effect effect = Filters.Scene["TeslaCoilLightning"].GetShader().Shader;
+
+                var world = Matrix.CreateTranslation(-Main.screenPosition.ToVector3());
+                Matrix view = Main.GameViewMatrix.ZoomMatrix;
+                var projection = Matrix.CreateOrthographicOffCenter(0, Main.screenWidth, Main.screenHeight, 0, -1, 1);
+
+                effect.Parameters["transformMatrix"].SetValue(world * view * projection);
+
+                lightningTrail?.Render(effect);
+
+                Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, DepthStencilState.None, RasterizerState.CullNone, null, Main.GameViewMatrix.TransformationMatrix);
+            }
         }
     }
 }

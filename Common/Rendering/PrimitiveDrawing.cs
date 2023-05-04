@@ -3,9 +3,8 @@ using Microsoft.Xna.Framework;
 using System;
 using System.Collections.Generic;
 using Terraria;
-using TidesOfTime;
 
-namespace StarlightRiver.Core
+namespace TidesOfTime.Common.Rendering
 {
     public class Primitives : IDisposable
     {
