@@ -1,7 +1,9 @@
-﻿using Terraria;
+﻿using Microsoft.Xna.Framework;
+using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
 using TidesOfTime.Content.Items.Abstract;
+using TidesOfTime.Content.Projectiles.Misc;
 using TidesOfTime.Content.Rarities;
 
 namespace TidesOfTime.Content.Items.Misc
@@ -28,6 +30,46 @@ namespace TidesOfTime.Content.Items.Misc
             Item.mana = 20;
 
             Item.rare = ModContent.RarityType<Futuristic>();
+
+            Item.shoot = ModContent.ProjectileType<TeslaCoil>();
+
+            Item.sentry = true;
+        }
+
+        public override bool CanUseItem(Player player)
+        {
+            for (int i = -1; i <= 1; i++)
+            {
+                for (int j = -1; j <= 1; j++)
+                {
+                    int x = (int)(Main.MouseWorld.X / 16) + i;
+                    int y = (int)(Main.MouseWorld.Y / 16) + j;
+
+                    if (!WorldGen.InWorld(x, y))
+                    {
+                        return false;
+                    }
+
+                    Tile tile = Main.tile[x, y];
+
+                    if (tile.HasTile && Main.tileSolid[tile.TileType])
+                    {
+                        return false;
+                    }
+                }
+            }
+
+            return base.CanUseItem(player);
+        }
+
+        public override void ModifyShootStats(Player player, ref Vector2 position, ref Vector2 velocity, ref int type, ref int damage, ref float knockback)
+        {
+            player.FindSentryRestingSpot(type, out int worldX, out int worldY, out _);
+
+            float pushYUp = ContentSamples.ProjectilesByType[Item.shoot].height / 2f;
+
+            position = new Vector2(worldX, worldY - pushYUp);
+            velocity = Vector2.Zero;
         }
     }
 }

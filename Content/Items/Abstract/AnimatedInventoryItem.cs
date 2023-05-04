@@ -26,26 +26,14 @@ namespace TidesOfTime.Content.Items.Abstract
 
         public override bool PreDrawInInventory(SpriteBatch spriteBatch, Vector2 position, Rectangle frame, Color drawColor, Color itemColor, Vector2 origin, float scale)
         {
-            int frameWidth = inventoryTexture.Width / FrameCount;
-
-            int currentFrame = (int)(Main.GameUpdateCount / TicksPerFrame) % FrameCount;
-
-            Rectangle sourceRectangle = new(currentFrame * frameWidth, 0, frameWidth, inventoryTexture.Height);
-
-            spriteBatch.Draw(inventoryTexture, position, sourceRectangle, drawColor, 0, origin, scale, SpriteEffects.None, 0);
+            TidesOfTimeUtils.DrawAnimatedTexture(inventoryTexture, FrameCount, TicksPerFrame, position, drawColor, origin, scale);
 
             return false;
         }
 
         public override bool PreDrawInWorld(SpriteBatch spriteBatch, Color lightColor, Color alphaColor, ref float rotation, ref float scale, int whoAmI)
         {
-            int frameWidth = inventoryTexture.Width / FrameCount;
-
-            int currentFrame = (int)(Main.GameUpdateCount / TicksPerFrame) % FrameCount;
-
-            Rectangle sourceRectangle = new(currentFrame * frameWidth, 0, frameWidth, inventoryTexture.Height);
-
-            spriteBatch.Draw(inventoryTexture, Item.position - Main.screenPosition, sourceRectangle, lightColor, 0, Vector2.Zero, scale, SpriteEffects.None, 0);
+            TidesOfTimeUtils.DrawAnimatedTexture(inventoryTexture, FrameCount, TicksPerFrame, Item.position - Main.screenPosition, lightColor, Vector2.Zero, scale);
 
             return false;
         }
