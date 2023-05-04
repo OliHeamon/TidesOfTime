@@ -105,5 +105,10 @@ namespace TidesOfTime.Content.Projectiles.Misc
 
             return base.PreDraw(ref lightColor);
         }
+
+        public override void PostDraw(Color lightColor)
+        {
+            base.PostDraw(lightColor);
+        }
     }
 }
