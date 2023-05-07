@@ -27,7 +27,16 @@ VertexShaderOutput VertexShaderFunction(VertexShaderInput input)
 
 float4 PixelShaderFunction(VertexShaderOutput input) : COLOR0
 {
-    return float4(1, 1, 1, 1);
+    if (input.TexCoords.y > 0.425 && input.TexCoords.y < 0.575) 
+    {
+        return input.Color;
+    }
+
+    float uv = saturate(abs((input.TexCoords.y - 0.5) * 2) + 0.3);
+
+    float4 purple = float4(58 / 255.0f, 32 / 255.0f, 129 / 255.0f, 1);
+
+    return smoothstep(input.Color, purple, uv);
 }
 
 technique Technique1
