@@ -22,8 +22,9 @@ namespace TidesOfTime.Content.Items.Summon
             Item.useTime = 30;
             Item.useAnimation = 30;
             Item.useStyle = ItemUseStyleID.Swing;
+            Item.UseSound = SoundID.DD2_DefenseTowerSpawn;
 
-            Item.damage = 85;
+            Item.damage = 52;
             Item.DamageType = DamageClass.Summon;
             Item.noMelee = true;
 
@@ -34,6 +35,8 @@ namespace TidesOfTime.Content.Items.Summon
             Item.shoot = ModContent.ProjectileType<TeslaCoil>();
 
             Item.sentry = true;
+
+            Item.value = Item.sellPrice(gold: 15);
         }
 
         public override bool CanUseItem(Player player)
