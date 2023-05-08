@@ -21,17 +21,17 @@ namespace TidesOfTime.Content.Projectiles.Misc
 
         private const int TicksPerFrame = 5;
 
-        private const int LightningMinPoints = 12;
+        private const int LightningMinPoints = 8;
 
         private const int LightningMaxPoints = 32;
 
-        private const float PointOffset = 5;
+        private const float PointOffset = 6;
 
         private const int ArcChangeFrequency = 10;
 
         private const int ArcOffsetLength = 60;
 
-        private const int ArcWidth = 14;
+        private const int ArcWidth = 12;
 
         private static readonly Vector2 LightningOffset = new(32, 2);
 
@@ -51,11 +51,11 @@ namespace TidesOfTime.Content.Projectiles.Misc
 
         private readonly Trail lightningTrail;
 
+        private readonly Trail lighterTrail;
+
         private readonly BezierCurve curve;
 
         private float arcOffset;
-
-        private RenderTarget2D target;
 
         public TeslaCoil()
         {
@@ -65,12 +65,9 @@ namespace TidesOfTime.Content.Projectiles.Misc
 
                 lightningTrail = new Trail(Main.graphics.GraphicsDevice, LightningMaxPoints, new TriangularTip(ArcWidth), factor => factor == 0 ? 0 : ArcWidth, texCoords => Color.White);
 
-                curve = new BezierCurve(new Vector2[3]);
+                lighterTrail = new Trail(Main.graphics.GraphicsDevice, LightningMaxPoints, new TriangularTip(ArcWidth), factor => factor == 0 ? 0 : ArcWidth, texCoords => Color.Pink);
 
-                Main.QueueMainThreadAction(() =>
-                {
-                    target = new RenderTarget2D(Main.graphics.GraphicsDevice, 1920, 1080, false, SurfaceFormat.Color, DepthFormat.None, 1, RenderTargetUsage.DiscardContents);
-                });
+                curve = new BezierCurve(new Vector2[3]);
             }
         }
 
@@ -139,11 +136,12 @@ namespace TidesOfTime.Content.Projectiles.Misc
 
             if (!Main.dedServ && Target != -1)
             {
-                ManageTrail();
+                ManageTrail(lightningTrail, 0);
+                ManageTrail(lighterTrail, 20);
             }
         }
 
-        private void ManageTrail()
+        private void ManageTrail(Trail trail, int offset)
         {
             int pointCount = (int)MathHelper.Min((int)(DistanceToTarget / MaxRange * LightningMaxPoints) + LightningMinPoints, LightningMaxPoints);
 
@@ -170,7 +168,7 @@ namespace TidesOfTime.Content.Projectiles.Misc
 
                 if (i != 0 && i != pointCount - 1)
                 {
-                    vectors[i] = vectors[i] + (rotatedNormal * (float)(randomOffset + (Math.Sin(-Main.GameUpdateCount + i) * PointOffset * 2)));
+                    vectors[i] = vectors[i] + (rotatedNormal * (float)(randomOffset + (Math.Sin(-Main.GameUpdateCount + i + offset) * PointOffset * 1.5)));
                 }
             }
 
@@ -179,8 +177,8 @@ namespace TidesOfTime.Content.Projectiles.Misc
                 vectors[i] = targetPosition;
             }
 
-            lightningTrail.Positions = vectors;
-            lightningTrail.NextPosition = targetPosition;
+            trail.Positions = vectors;
+            trail.NextPosition = targetPosition;
         }
 
         private Vector2[] GetBezierCurve(Vector2 start, Vector2 end, int pointCount)
@@ -236,10 +234,6 @@ namespace TidesOfTime.Content.Projectiles.Misc
 
                 Main.spriteBatch.End();
 
-                /*RenderTargetBinding[] targets = Main.graphics.GraphicsDevice.GetRenderTargets();
-
-                Main.graphics.GraphicsDevice.SetRenderTarget(target);*/
-
                 Effect effect = Filters.Scene["TeslaCoilLightning"].GetShader().Shader;
 
                 Matrix world = Matrix.CreateTranslation(-Main.screenPosition.ToVector3());
@@ -247,18 +241,14 @@ namespace TidesOfTime.Content.Projectiles.Misc
                 Matrix projection = Matrix.CreateOrthographicOffCenter(0, Main.screenWidth, Main.screenHeight, 0, -1, 1);
 
                 effect.Parameters["transformMatrix"].SetValue(world * view * projection);
+                effect.Parameters["opacity"].SetValue(1.0f);
 
                 lightningTrail?.Render(effect);
 
-                /*Main.graphics.GraphicsDevice.SetRenderTargets(targets);
+                effect.Parameters["opacity"].SetValue(0.5f);
 
-                /Main.spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend,
-                SamplerState.LinearClamp, DepthStencilState.Default,
-                RasterizerState.CullNone);
+                lighterTrail?.Render(effect);
 
-                Main.spriteBatch.Draw(target, new Rectangle(0, 0, 1920, 1080), Color.White);
-
-                Main.spriteBatch.End();*/
                 Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, DepthStencilState.None, RasterizerState.CullNone, null, Main.GameViewMatrix.TransformationMatrix);
 
                 return false;
