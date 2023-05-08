@@ -159,11 +159,24 @@ namespace TidesOfTime.Content.Projectiles.Summon
                 cooldownTimer = 0;
 
                 // Trails for the main target.
-                Vector2[] targetTrail = ManageTrail(0, Projectile.position + LightningOffset, Main.npc[(int)Target].Center, out Vector2 targetTrailPosition);
-                Vector2[] lighterTargetTrail = ManageTrail(20, Projectile.position + LightningOffset, Main.npc[(int)Target].Center, out Vector2 lighterTargetTrailPosition);
+                for (int i = 0; i < 2; i++)
+                {
+                    Vector2 start = Projectile.position + LightningOffset;
+                    Vector2 end = Main.npc[(int)Target].Center;
 
-                trails.Add(new(targetTrail, targetTrailPosition));
-                lighterTrails.Add(new(lighterTargetTrail, lighterTargetTrailPosition));
+                    // On second second iteration creates the same trails but in reverse - 2 trails overlapping provides a more chaotic look.
+                    if (i == 1)
+                    {
+                        end = Projectile.position + LightningOffset;
+                        start = Main.npc[(int)Target].Center;
+                    }
+
+                    Vector2[] targetTrail = ManageTrail(0, start, end);
+                    Vector2[] lighterTargetTrail = ManageTrail(20, start, end);
+
+                    trails.Add(new(targetTrail, end));
+                    lighterTrails.Add(new(lighterTargetTrail, end));
+                }
             }
 
             for (int i = 0; i < Main.maxProjectiles; i++)
@@ -177,11 +190,11 @@ namespace TidesOfTime.Content.Projectiles.Summon
                     if (distance < MaxRange)
                     {
                         // Trails for other tesla coils.
-                        Vector2[] targetTrail = ManageTrail(0, Projectile.position + LightningOffset, projectile.position + LightningOffset, out Vector2 targetTrailPosition);
-                        Vector2[] lighterTargetTrail = ManageTrail(20, Projectile.position + LightningOffset, projectile.position + LightningOffset, out Vector2 lighterTargetTrailPosition);
+                        Vector2[] targetTrail = ManageTrail(0, Projectile.position + LightningOffset, projectile.position + LightningOffset);
+                        Vector2[] lighterTargetTrail = ManageTrail(20, Projectile.position + LightningOffset, projectile.position + LightningOffset);
 
-                        trails.Add(new(targetTrail, targetTrailPosition));
-                        lighterTrails.Add(new(lighterTargetTrail, lighterTargetTrailPosition));
+                        trails.Add(new(targetTrail, projectile.position + LightningOffset));
+                        lighterTrails.Add(new(lighterTargetTrail, projectile.position + LightningOffset));
 
                         adjacentCoils++;
                     }
@@ -212,11 +225,9 @@ namespace TidesOfTime.Content.Projectiles.Summon
             }
         }
 
-        private Vector2[] ManageTrail(int offset, Vector2 start, Vector2 end, out Vector2 targetPosition)
+        private Vector2[] ManageTrail(int offset, Vector2 start, Vector2 end)
         {
             int pointCount = (int)MathHelper.Min((int)(DistanceToTarget / MaxRange * LightningMaxPoints) + LightningMinPoints, LightningMaxPoints);
-
-            targetPosition = end;
 
             Vector2[] vectors = GetBezierCurve(start, end, pointCount);
 
@@ -230,7 +241,7 @@ namespace TidesOfTime.Content.Projectiles.Summon
                 }
                 else
                 {
-                    normal = (targetPosition - vectors[i]).SafeNormalize(Vector2.Zero);
+                    normal = (end - vectors[i]).SafeNormalize(Vector2.Zero);
                 }
 
                 Vector2 rotatedNormal = normal.RotatedBy(MathHelper.PiOver2);
@@ -239,13 +250,14 @@ namespace TidesOfTime.Content.Projectiles.Summon
 
                 if (i != 0 && i != pointCount - 1)
                 {
+                    // Offset is an arbitrary parameter that just provides an offset for the secondary trail when applied, by offsetting the sine's x-component.
                     vectors[i] = vectors[i] + (rotatedNormal * (float)(randomOffset + (Math.Sin(-Main.GameUpdateCount + i + offset) * PointOffset * 1.5)));
                 }
             }
 
             for (int i = pointCount; i < LightningMaxPoints; i++) 
             {
-                vectors[i] = targetPosition;
+                vectors[i] = end;
             }
 
             return vectors;
