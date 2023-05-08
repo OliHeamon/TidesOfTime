@@ -8,24 +8,19 @@ Items: {
 			'''
 	}
 
-	StrawberryHairpin: {
-		DisplayName: Strawberry Hairpin
-		Tooltip: ""
-	}
-
 	MountainClimberJacket: {
 		DisplayName: Mountain Climber Jacket
-		Tooltip: ""
+		Tooltip: '''"You can do this!"'''
 	}
 
 	MountainClimberLeggings: {
 		DisplayName: Mountain Climber Leggings
-		Tooltip: ""
+		Tooltip: '''"Nothing can stop us!"'''
 	}
 
 	MountainClimberHairpin: {
 		DisplayName: Mountain Climber Hairpin
-		Tooltip: ""
+		Tooltip: '''"Let's climb out of here together."'''
 	}
 }
 
