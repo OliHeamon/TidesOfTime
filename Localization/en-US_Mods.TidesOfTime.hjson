@@ -7,6 +7,26 @@ Items: {
 			Multiple tesla coils can arc to each other to increase their range and damage
 			'''
 	}
+
+	StrawberryHairpin: {
+		DisplayName: Strawberry Hairpin
+		Tooltip: ""
+	}
+
+	MountainClimberJacket: {
+		DisplayName: Mountain Climber Jacket
+		Tooltip: ""
+	}
+
+	MountainClimberLeggings: {
+		DisplayName: Mountain Climber Leggings
+		Tooltip: ""
+	}
+
+	MountainClimberHairpin: {
+		DisplayName: Mountain Climber Hairpin
+		Tooltip: ""
+	}
 }
 
 Projectiles.TeslaCoil.DisplayName: Tesla Coil
