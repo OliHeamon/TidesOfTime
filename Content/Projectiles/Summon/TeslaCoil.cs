@@ -149,40 +149,41 @@ namespace TidesOfTime.Content.Projectiles.Summon
                 Projectile.netUpdate = true;
             }
 
-            if (!Main.dedServ)
+            trails.Clear();
+            lighterTrails.Clear();
+
+            int adjacentCoils = 1;
+
+            if (Target != -1)
             {
-                trails.Clear();
-                lighterTrails.Clear();
+                cooldownTimer = 0;
 
-                if (Target != -1)
+                // Trails for the main target.
+                Vector2[] targetTrail = ManageTrail(0, Projectile.position + LightningOffset, Main.npc[(int)Target].Center, out Vector2 targetTrailPosition);
+                Vector2[] lighterTargetTrail = ManageTrail(20, Projectile.position + LightningOffset, Main.npc[(int)Target].Center, out Vector2 lighterTargetTrailPosition);
+
+                trails.Add(new(targetTrail, targetTrailPosition));
+                lighterTrails.Add(new(lighterTargetTrail, lighterTargetTrailPosition));
+            }
+
+            for (int i = 0; i < Main.maxProjectiles; i++)
+            {
+                Projectile projectile = Main.projectile[i];
+
+                if (projectile.active && projectile.type == Projectile.type && projectile.whoAmI != Projectile.whoAmI)
                 {
-                    cooldownTimer = 0;
+                    float distance = Vector2.Distance(Projectile.Center, projectile.Center);
 
-                    // Trails for the main target.
-                    Vector2[] targetTrail = ManageTrail(0, Projectile.position + LightningOffset, Main.npc[(int)Target].Center, out Vector2 targetTrailPosition);
-                    Vector2[] lighterTargetTrail = ManageTrail(20, Projectile.position + LightningOffset, Main.npc[(int)Target].Center, out Vector2 lighterTargetTrailPosition);
-
-                    trails.Add(new(targetTrail, targetTrailPosition));
-                    lighterTrails.Add(new(lighterTargetTrail, lighterTargetTrailPosition));
-                }
-
-                for (int i = 0; i < Main.maxProjectiles; i++)
-                {
-                    Projectile projectile = Main.projectile[i];
-
-                    if (projectile.active && projectile.type == Projectile.type && projectile.whoAmI != Projectile.whoAmI)
+                    if (distance < MaxRange)
                     {
-                        float distance = Vector2.Distance(Projectile.Center, projectile.Center);
+                        // Trails for other tesla coils.
+                        Vector2[] targetTrail = ManageTrail(0, Projectile.position + LightningOffset, projectile.position + LightningOffset, out Vector2 targetTrailPosition);
+                        Vector2[] lighterTargetTrail = ManageTrail(20, Projectile.position + LightningOffset, projectile.position + LightningOffset, out Vector2 lighterTargetTrailPosition);
 
-                        if (distance < MaxRange)
-                        {
-                            // Trails for other tesla coils.
-                            Vector2[] targetTrail = ManageTrail(0, Projectile.position + LightningOffset, projectile.position + LightningOffset, out Vector2 targetTrailPosition);
-                            Vector2[] lighterTargetTrail = ManageTrail(20, Projectile.position + LightningOffset, projectile.position + LightningOffset, out Vector2 lighterTargetTrailPosition);
+                        trails.Add(new(targetTrail, targetTrailPosition));
+                        lighterTrails.Add(new(lighterTargetTrail, lighterTargetTrailPosition));
 
-                            trails.Add(new(targetTrail, targetTrailPosition));
-                            lighterTrails.Add(new(lighterTargetTrail, lighterTargetTrailPosition));
-                        }
+                        adjacentCoils++;
                     }
                 }
             }
@@ -199,7 +200,7 @@ namespace TidesOfTime.Content.Projectiles.Summon
                         for (int j = 0; j < trailInfo.Points.Length; j++)
                         {
                             Projectile.NewProjectile(Projectile.GetSource_FromThis(), trailInfo.Points[j], Vector2.Zero,
-                                ModContent.ProjectileType<TeslaCoilDamageProjectile>(), Damage, 0, Projectile.owner);
+                                ModContent.ProjectileType<TeslaCoilDamageProjectile>(), Damage * adjacentCoils, 0, Projectile.owner);
                         }
                     }
                 }
