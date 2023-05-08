@@ -23,7 +23,7 @@ namespace TidesOfTime.Content.Items.Summon
             Item.useAnimation = 30;
             Item.useStyle = ItemUseStyleID.Swing;
 
-            Item.damage = 225;
+            Item.damage = 85;
             Item.DamageType = DamageClass.Summon;
             Item.noMelee = true;
 

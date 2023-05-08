@@ -37,8 +37,6 @@ namespace TidesOfTime.Content.Projectiles.Summon
 
         private const int StrikeFrequency = 6;
 
-        private const int Damage = 225;
-
         private static readonly Vector2 LightningOffset = new(32, 2);
 
         private float Target
@@ -69,6 +67,8 @@ namespace TidesOfTime.Content.Projectiles.Summon
 
         private readonly List<TrailInfo> lighterTrails;
 
+        private int oldTarget;
+
         public TeslaCoil()
         {
             if (!Main.dedServ)
@@ -96,6 +96,8 @@ namespace TidesOfTime.Content.Projectiles.Summon
             Projectile.tileCollide = false;
 
             Projectile.timeLeft = 60 * 60 * 3;
+
+            Projectile.DamageType = DamageClass.Summon;
         }
 
         public override void OnSpawn(IEntitySource source)
@@ -164,7 +166,7 @@ namespace TidesOfTime.Content.Projectiles.Summon
                     Vector2 start = Projectile.position + LightningOffset;
                     Vector2 end = Main.npc[(int)Target].Center;
 
-                    // On second second iteration creates the same trails but in reverse - 2 trails overlapping provides a more chaotic look.
+                    // On the second iteration it creates the same trails but in reverse - 2 trails overlapping provides a more chaotic look.
                     if (i == 1)
                     {
                         end = Projectile.position + LightningOffset;
@@ -189,7 +191,7 @@ namespace TidesOfTime.Content.Projectiles.Summon
 
                     if (distance < MaxRange)
                     {
-                        // Trails for other tesla coils.
+                        // Trails to other tesla coils.
                         Vector2[] targetTrail = ManageTrail(0, Projectile.position + LightningOffset, projectile.position + LightningOffset);
                         Vector2[] lighterTargetTrail = ManageTrail(20, Projectile.position + LightningOffset, projectile.position + LightningOffset);
 
@@ -213,7 +215,7 @@ namespace TidesOfTime.Content.Projectiles.Summon
                         for (int j = 0; j < trailInfo.Points.Length; j++)
                         {
                             Projectile.NewProjectile(Projectile.GetSource_FromThis(), trailInfo.Points[j], Vector2.Zero,
-                                ModContent.ProjectileType<TeslaCoilDamageProjectile>(), Damage * adjacentCoils, 0, Projectile.owner);
+                                ModContent.ProjectileType<TeslaCoilDamageProjectile>(), Projectile.damage * adjacentCoils, 0, Projectile.owner);
                         }
                     }
                 }
@@ -223,6 +225,19 @@ namespace TidesOfTime.Content.Projectiles.Summon
             {
                 cooldownTimer++;
             }
+
+            // A target was just acquired.
+            if (oldTarget == -1 && Target != -1)
+            {
+
+            }
+            // A target was just lost.
+            else if (Target == -1 && oldTarget != -1)
+            {
+
+            }
+
+            oldTarget = (int)Target;
         }
 
         private Vector2[] ManageTrail(int offset, Vector2 start, Vector2 end)
@@ -314,42 +329,41 @@ namespace TidesOfTime.Content.Projectiles.Summon
             {
                 TidesOfTimeUtils.DrawAnimatedTexture(activeTexture, FrameCount, TicksPerFrame, Projectile.position - Main.screenPosition, lightColor, Vector2.Zero, 1);
 
-                Main.spriteBatch.End();
-
-                Effect effect = Filters.Scene["TeslaCoilLightning"].GetShader().Shader;
-
-                Matrix world = Matrix.CreateTranslation(-Main.screenPosition.ToVector3());
-                Matrix view = Main.GameViewMatrix.ZoomMatrix;
-                Matrix projection = Matrix.CreateOrthographicOffCenter(0, Main.screenWidth, Main.screenHeight, 0, -1, 1);
-
-                effect.Parameters["transformMatrix"].SetValue(world * view * projection);
-                effect.Parameters["opacity"].SetValue(1.0f);
-
-                for (int i = 0; i < trails.Count; i++)
+                TidesOfTime.Instance.PrimitiveRenderer.QueueRenderAction(RenderingStep.PreDraw, () =>
                 {
-                    TrailInfo trailInfo = trails[i];
+                    Effect effect = Filters.Scene["TeslaCoilLightning"].GetShader().Shader;
 
-                    lightningTrail.Positions = trailInfo.Points;
-                    lightningTrail.NextPosition = trailInfo.NextPosition;
+                    Matrix world = Matrix.CreateTranslation(-Main.screenPosition.ToVector3());
+                    Matrix view = Main.GameViewMatrix.ZoomMatrix;
+                    Matrix projection = Matrix.CreateOrthographicOffCenter(0, Main.screenWidth, Main.screenHeight, 0, -1, 1);
 
-                    lightningTrail.Render(effect);
-                }
+                    effect.Parameters["transformMatrix"].SetValue(world * view * projection);
+                    effect.Parameters["opacity"].SetValue(1.0f);
 
-                effect.Parameters["opacity"].SetValue(0.5f);
+                    for (int i = 0; i < trails.Count; i++)
+                    {
+                        TrailInfo trailInfo = trails[i];
 
-                for (int i = 0; i < lighterTrails.Count; i++)
-                {
-                    TrailInfo trailInfo = lighterTrails[i];
+                        lightningTrail.Positions = trailInfo.Points;
+                        lightningTrail.NextPosition = trailInfo.NextPosition;
 
-                    lighterTrail.Positions = trailInfo.Points;
-                    lighterTrail.NextPosition = trailInfo.NextPosition;
+                        lightningTrail.Render(effect);
+                    }
 
-                    lighterTrail.Render(effect);
-                }
+                    effect.Parameters["opacity"].SetValue(0.5f);
+
+                    for (int i = 0; i < lighterTrails.Count; i++)
+                    {
+                        TrailInfo trailInfo = lighterTrails[i];
+
+                        lighterTrail.Positions = trailInfo.Points;
+                        lighterTrail.NextPosition = trailInfo.NextPosition;
+
+                        lighterTrail.Render(effect);
+                    }
+                });
 
                 ManageLight();
-
-                Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, DepthStencilState.None, RasterizerState.CullNone, null, Main.GameViewMatrix.TransformationMatrix);
 
                 return false;
             }

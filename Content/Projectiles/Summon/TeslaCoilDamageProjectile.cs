@@ -1,4 +1,5 @@
-﻿using Terraria.ModLoader;
+﻿using Terraria;
+using Terraria.ModLoader;
 
 namespace TidesOfTime.Content.Projectiles.Summon
 {
@@ -12,8 +13,8 @@ namespace TidesOfTime.Content.Projectiles.Summon
 
             Projectile.timeLeft = 2;
 
-            Projectile.width = 24;
-            Projectile.height = 24;
+            Projectile.width = 32;
+            Projectile.height = 32;
 
             Projectile.penetrate = -1;
 
