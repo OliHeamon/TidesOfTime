@@ -11,7 +11,7 @@ using Terraria.ModLoader;
 using TidesOfTime.Common.Math;
 using TidesOfTime.Common.Rendering;
 
-namespace TidesOfTime.Content.Projectiles.Misc
+namespace TidesOfTime.Content.Projectiles.Summon
 {
     public class TeslaCoil : ModProjectile
     {
@@ -32,6 +32,12 @@ namespace TidesOfTime.Content.Projectiles.Misc
         private const int ArcOffsetLength = 60;
 
         private const int ArcWidth = 12;
+
+        private const int ArcCooldownDuration = 24;
+
+        private const int StrikeFrequency = 6;
+
+        private const int Damage = 225;
 
         private static readonly Vector2 LightningOffset = new(32, 2);
 
@@ -57,6 +63,12 @@ namespace TidesOfTime.Content.Projectiles.Misc
 
         private float arcOffset;
 
+        private int cooldownTimer;
+
+        private readonly List<TrailInfo> trails;
+
+        private readonly List<TrailInfo> lighterTrails;
+
         public TeslaCoil()
         {
             if (!Main.dedServ)
@@ -68,6 +80,9 @@ namespace TidesOfTime.Content.Projectiles.Misc
                 lighterTrail = new Trail(Main.graphics.GraphicsDevice, LightningMaxPoints, new TriangularTip(ArcWidth), factor => factor == 0 ? 0 : ArcWidth, texCoords => Color.Pink);
 
                 curve = new BezierCurve(new Vector2[3]);
+
+                trails = new List<TrailInfo>();
+                lighterTrails = new List<TrailInfo>();
             }
         }
 
@@ -80,7 +95,7 @@ namespace TidesOfTime.Content.Projectiles.Misc
 
             Projectile.tileCollide = false;
 
-            Projectile.timeLeft = ushort.MaxValue;
+            Projectile.timeLeft = 60 * 60 * 3;
         }
 
         public override void OnSpawn(IEntitySource source)
@@ -134,20 +149,75 @@ namespace TidesOfTime.Content.Projectiles.Misc
                 Projectile.netUpdate = true;
             }
 
-            if (!Main.dedServ && Target != -1)
+            if (!Main.dedServ)
             {
-                ManageTrail(lightningTrail, 0);
-                ManageTrail(lighterTrail, 20);
+                trails.Clear();
+                lighterTrails.Clear();
+
+                if (Target != -1)
+                {
+                    cooldownTimer = 0;
+
+                    // Trails for the main target.
+                    Vector2[] targetTrail = ManageTrail(0, Projectile.position + LightningOffset, Main.npc[(int)Target].Center, out Vector2 targetTrailPosition);
+                    Vector2[] lighterTargetTrail = ManageTrail(20, Projectile.position + LightningOffset, Main.npc[(int)Target].Center, out Vector2 lighterTargetTrailPosition);
+
+                    trails.Add(new(targetTrail, targetTrailPosition));
+                    lighterTrails.Add(new(lighterTargetTrail, lighterTargetTrailPosition));
+                }
+
+                for (int i = 0; i < Main.maxProjectiles; i++)
+                {
+                    Projectile projectile = Main.projectile[i];
+
+                    if (projectile.active && projectile.type == Projectile.type && projectile.whoAmI != Projectile.whoAmI)
+                    {
+                        float distance = Vector2.Distance(Projectile.Center, projectile.Center);
+
+                        if (distance < MaxRange)
+                        {
+                            // Trails for other tesla coils.
+                            Vector2[] targetTrail = ManageTrail(0, Projectile.position + LightningOffset, projectile.position + LightningOffset, out Vector2 targetTrailPosition);
+                            Vector2[] lighterTargetTrail = ManageTrail(20, Projectile.position + LightningOffset, projectile.position + LightningOffset, out Vector2 lighterTargetTrailPosition);
+
+                            trails.Add(new(targetTrail, targetTrailPosition));
+                            lighterTrails.Add(new(lighterTargetTrail, lighterTargetTrailPosition));
+                        }
+                    }
+                }
+            }
+
+            // Apply damage to enemies.
+            if (Main.netMode != NetmodeID.MultiplayerClient)
+            {
+                if (Main.GameUpdateCount % StrikeFrequency == 0)
+                {
+                    for (int i = 0; i < trails.Count; i++)
+                    {
+                        TrailInfo trailInfo = trails[i];
+
+                        for (int j = 0; j < trailInfo.Points.Length; j++)
+                        {
+                            Projectile.NewProjectile(Projectile.GetSource_FromThis(), trailInfo.Points[j], Vector2.Zero,
+                                ModContent.ProjectileType<TeslaCoilDamageProjectile>(), Damage, 0, Projectile.owner);
+                        }
+                    }
+                }
+            }
+
+            if (cooldownTimer < ArcCooldownDuration)
+            {
+                cooldownTimer++;
             }
         }
 
-        private void ManageTrail(Trail trail, int offset)
+        private Vector2[] ManageTrail(int offset, Vector2 start, Vector2 end, out Vector2 targetPosition)
         {
             int pointCount = (int)MathHelper.Min((int)(DistanceToTarget / MaxRange * LightningMaxPoints) + LightningMinPoints, LightningMaxPoints);
 
-            Vector2 targetPosition = Main.npc[(int)Target].Center;
+            targetPosition = end;
 
-            Vector2[] vectors = GetBezierCurve(Projectile.position + LightningOffset, targetPosition, pointCount);
+            Vector2[] vectors = GetBezierCurve(start, end, pointCount);
 
             for (int i = 0; i < pointCount; i++)
             {
@@ -177,8 +247,7 @@ namespace TidesOfTime.Content.Projectiles.Misc
                 vectors[i] = targetPosition;
             }
 
-            trail.Positions = vectors;
-            trail.NextPosition = targetPosition;
+            return vectors;
         }
 
         private Vector2[] GetBezierCurve(Vector2 start, Vector2 end, int pointCount)
@@ -228,7 +297,7 @@ namespace TidesOfTime.Content.Projectiles.Misc
 
         public override bool PreDraw(ref Color lightColor)
         {
-            if (Target != -1)
+            if (trails.Count > 0 && !Main.dedServ)
             {
                 TidesOfTimeUtils.DrawAnimatedTexture(activeTexture, FrameCount, TicksPerFrame, Projectile.position - Main.screenPosition, lightColor, Vector2.Zero, 1);
 
@@ -243,11 +312,29 @@ namespace TidesOfTime.Content.Projectiles.Misc
                 effect.Parameters["transformMatrix"].SetValue(world * view * projection);
                 effect.Parameters["opacity"].SetValue(1.0f);
 
-                lightningTrail?.Render(effect);
+                for (int i = 0; i < trails.Count; i++)
+                {
+                    TrailInfo trailInfo = trails[i];
+
+                    lightningTrail.Positions = trailInfo.Points;
+                    lightningTrail.NextPosition = trailInfo.NextPosition;
+
+                    lightningTrail.Render(effect);
+                }
 
                 effect.Parameters["opacity"].SetValue(0.5f);
 
-                lighterTrail?.Render(effect);
+                for (int i = 0; i < lighterTrails.Count; i++)
+                {
+                    TrailInfo trailInfo = lighterTrails[i];
+
+                    lighterTrail.Positions = trailInfo.Points;
+                    lighterTrail.NextPosition = trailInfo.NextPosition;
+
+                    lighterTrail.Render(effect);
+                }
+
+                ManageLight();
 
                 Main.spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.AlphaBlend, SamplerState.PointClamp, DepthStencilState.None, RasterizerState.CullNone, null, Main.GameViewMatrix.TransformationMatrix);
 
@@ -255,6 +342,34 @@ namespace TidesOfTime.Content.Projectiles.Misc
             }
 
             return base.PreDraw(ref lightColor);
+        }
+
+        private void ManageLight()
+        {
+            Lighting.AddLight(Projectile.Center, Color.Yellow.ToVector3());
+
+            for (int i = 0; i < trails.Count; i++)
+            {
+                TrailInfo trailInfo = trails[i];
+
+                for (int j = 0; j < trailInfo.Points.Length; j++)
+                {
+                    Lighting.AddLight(trailInfo.Points[j], Color.Lerp(Color.Pink, Color.Purple, Main.rand.NextFloat()).ToVector3());
+                }
+            }
+        }
+
+        private struct TrailInfo
+        {
+            public Vector2[] Points;
+
+            public Vector2 NextPosition;
+
+            public TrailInfo(Vector2[] points, Vector2 nextPosition)
+            {
+                Points = points;
+                NextPosition = nextPosition;
+            }
         }
     }
 }

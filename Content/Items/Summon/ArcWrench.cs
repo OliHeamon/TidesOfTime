@@ -3,10 +3,10 @@ using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
 using TidesOfTime.Content.Items.Abstract;
-using TidesOfTime.Content.Projectiles.Misc;
+using TidesOfTime.Content.Projectiles.Summon;
 using TidesOfTime.Content.Rarities;
 
-namespace TidesOfTime.Content.Items.Misc
+namespace TidesOfTime.Content.Items.Summon
 {
     public class ArcWrench : AnimatedInventoryItem
     {
@@ -23,7 +23,7 @@ namespace TidesOfTime.Content.Items.Misc
             Item.useAnimation = 30;
             Item.useStyle = ItemUseStyleID.Swing;
 
-            Item.damage = 100;
+            Item.damage = 225;
             Item.DamageType = DamageClass.Summon;
             Item.noMelee = true;
 

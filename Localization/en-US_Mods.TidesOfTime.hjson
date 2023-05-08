@@ -24,4 +24,8 @@ Items: {
 	}
 }
 
-Projectiles.TeslaCoil.DisplayName: Tesla Coil
+Projectiles: {
+	TeslaCoil.DisplayName: Tesla Coil
+	DamageProjectile.DisplayName: Damage Projectile
+	TeslaCoilDamageProjectile.DisplayName: Tesla Coil Damage Projectile
+}

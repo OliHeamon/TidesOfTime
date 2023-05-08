@@ -34,15 +34,12 @@ namespace TidesOfTime
 
         public override Stream OpenStream(string fullAssetName)
         {
-            // File exists without a redirection.  Attempt to use it
             if (file.HasFile(fullAssetName))
                 return file.GetStream(fullAssetName, newFileStream: true);
 
-            // File might need a redirection...
             if (!fullAssetName.StartsWith("Assets/") && file.HasFile(fullAssetName.Replace("Content", "Assets")))
                 return file.GetStream(fullAssetName.Replace("Content", "Assets"), newFileStream: true);
 
-            // File not found
             throw new KeyNotFoundException(fullAssetName);
         }
     }
