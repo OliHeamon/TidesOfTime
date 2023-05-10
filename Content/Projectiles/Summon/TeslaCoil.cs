@@ -55,8 +55,6 @@ namespace TidesOfTime.Content.Projectiles.Summon
 
         private readonly Trail lightningTrail;
 
-        private readonly Trail lighterTrail;
-
         private readonly BezierCurve curve;
 
         private float arcOffset;
@@ -64,8 +62,6 @@ namespace TidesOfTime.Content.Projectiles.Summon
         private int cooldownTimer;
 
         private readonly List<TrailInfo> trails;
-
-        private readonly List<TrailInfo> lighterTrails;
 
         private int oldTarget;
 
@@ -77,12 +73,9 @@ namespace TidesOfTime.Content.Projectiles.Summon
 
                 lightningTrail = new Trail(Main.graphics.GraphicsDevice, LightningMaxPoints, new TriangularTip(ArcWidth), factor => factor == 0 ? 0 : ArcWidth, texCoords => Color.White);
 
-                lighterTrail = new Trail(Main.graphics.GraphicsDevice, LightningMaxPoints, new TriangularTip(ArcWidth), factor => factor == 0 ? 0 : ArcWidth, texCoords => Color.Pink);
-
                 curve = new BezierCurve(new Vector2[3]);
 
                 trails = new List<TrailInfo>();
-                lighterTrails = new List<TrailInfo>();
             }
         }
 
@@ -152,7 +145,6 @@ namespace TidesOfTime.Content.Projectiles.Summon
             }
 
             trails.Clear();
-            lighterTrails.Clear();
 
             int adjacentCoils = 1;
 
@@ -177,7 +169,7 @@ namespace TidesOfTime.Content.Projectiles.Summon
                     Vector2[] lighterTargetTrail = ManageTrail(20, start, end, DistanceToTarget);
 
                     trails.Add(new(targetTrail, end));
-                    lighterTrails.Add(new(lighterTargetTrail, end));
+                    trails.Add(new(lighterTargetTrail, end));
                 }
             }
 
@@ -196,7 +188,7 @@ namespace TidesOfTime.Content.Projectiles.Summon
                         Vector2[] lighterTargetTrail = ManageTrail(20, Projectile.position + LightningOffset, projectile.position + LightningOffset, distance);
 
                         trails.Add(new(targetTrail, projectile.position + LightningOffset));
-                        lighterTrails.Add(new(lighterTargetTrail, projectile.position + LightningOffset));
+                        trails.Add(new(lighterTargetTrail, projectile.position + LightningOffset));
 
                         adjacentCoils++;
                     }
@@ -348,18 +340,6 @@ namespace TidesOfTime.Content.Projectiles.Summon
                         lightningTrail.NextPosition = trailInfo.NextPosition;
 
                         lightningTrail.Render(effect);
-                    }
-
-                    effect.Parameters["opacity"].SetValue(0.8f);
-
-                    for (int i = 0; i < lighterTrails.Count; i++)
-                    {
-                        TrailInfo trailInfo = lighterTrails[i];
-
-                        lighterTrail.Positions = trailInfo.Points;
-                        lighterTrail.NextPosition = trailInfo.NextPosition;
-
-                        lighterTrail.Render(effect);
                     }
                 });
 
