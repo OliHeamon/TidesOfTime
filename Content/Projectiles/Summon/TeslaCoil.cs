@@ -173,8 +173,8 @@ namespace TidesOfTime.Content.Projectiles.Summon
                         start = Main.npc[(int)Target].Center;
                     }
 
-                    Vector2[] targetTrail = ManageTrail(0, start, end);
-                    Vector2[] lighterTargetTrail = ManageTrail(20, start, end);
+                    Vector2[] targetTrail = ManageTrail(0, start, end, DistanceToTarget);
+                    Vector2[] lighterTargetTrail = ManageTrail(20, start, end, DistanceToTarget);
 
                     trails.Add(new(targetTrail, end));
                     lighterTrails.Add(new(lighterTargetTrail, end));
@@ -192,8 +192,8 @@ namespace TidesOfTime.Content.Projectiles.Summon
                     if (distance < MaxRange)
                     {
                         // Trails to other tesla coils.
-                        Vector2[] targetTrail = ManageTrail(0, Projectile.position + LightningOffset, projectile.position + LightningOffset);
-                        Vector2[] lighterTargetTrail = ManageTrail(20, Projectile.position + LightningOffset, projectile.position + LightningOffset);
+                        Vector2[] targetTrail = ManageTrail(0, Projectile.position + LightningOffset, projectile.position + LightningOffset, distance);
+                        Vector2[] lighterTargetTrail = ManageTrail(20, Projectile.position + LightningOffset, projectile.position + LightningOffset, distance);
 
                         trails.Add(new(targetTrail, projectile.position + LightningOffset));
                         lighterTrails.Add(new(lighterTargetTrail, projectile.position + LightningOffset));
@@ -240,9 +240,9 @@ namespace TidesOfTime.Content.Projectiles.Summon
             oldTarget = (int)Target;
         }
 
-        private Vector2[] ManageTrail(int offset, Vector2 start, Vector2 end)
+        private Vector2[] ManageTrail(int offset, Vector2 start, Vector2 end, float distance)
         {
-            int pointCount = (int)MathHelper.Min((int)(DistanceToTarget / MaxRange * LightningMaxPoints) + LightningMinPoints, LightningMaxPoints);
+            int pointCount = (int)MathHelper.Min((int)(distance / MaxRange * LightningMaxPoints) + LightningMinPoints, LightningMaxPoints);
 
             Vector2[] vectors = GetBezierCurve(start, end, pointCount);
 
@@ -329,12 +329,12 @@ namespace TidesOfTime.Content.Projectiles.Summon
             {
                 TidesOfTimeUtils.DrawAnimatedTexture(activeTexture, FrameCount, TicksPerFrame, Projectile.position - Main.screenPosition, lightColor, Vector2.Zero, 1);
 
-                TidesOfTime.Instance.PrimitiveRenderer.QueueRenderAction(RenderingStep.PreDraw, () =>
+                ModContent.GetInstance<PrimitiveSystem>().QueueRenderAction("Electricity", () =>
                 {
                     Effect effect = Filters.Scene["TeslaCoilLightning"].GetShader().Shader;
 
                     Matrix world = Matrix.CreateTranslation(-Main.screenPosition.ToVector3());
-                    Matrix view = Main.GameViewMatrix.ZoomMatrix;
+                    Matrix view = Matrix.Identity;
                     Matrix projection = Matrix.CreateOrthographicOffCenter(0, Main.screenWidth, Main.screenHeight, 0, -1, 1);
 
                     effect.Parameters["transformMatrix"].SetValue(world * view * projection);
@@ -350,7 +350,7 @@ namespace TidesOfTime.Content.Projectiles.Summon
                         lightningTrail.Render(effect);
                     }
 
-                    effect.Parameters["opacity"].SetValue(0.5f);
+                    effect.Parameters["opacity"].SetValue(0.8f);
 
                     for (int i = 0; i < lighterTrails.Count; i++)
                     {

@@ -1,6 +1,5 @@
 using ReLogic.Content.Sources;
 using System.Reflection;
-using Terraria;
 using Terraria.ModLoader;
 using Terraria.ModLoader.Core;
 using TidesOfTime.Common.Rendering;
@@ -11,27 +10,14 @@ namespace TidesOfTime
 	{
         public static TidesOfTime Instance { get; private set; }
 
-        public PrimitiveRenderer PrimitiveRenderer { get; private set; }
-
         public TidesOfTime()
         {
             Instance = this;
         }
 
-        public override void Load()
+        public override void PostSetupContent()
         {
-            PrimitiveRenderer = new();
-            PrimitiveRenderer.Load();
-
-            Main.OnResolutionChanged += resolution =>
-            {
-                PrimitiveRenderer.TargetsNeedResizing();
-            };
-        }
-
-        public override void Unload()
-        {
-            PrimitiveRenderer.Unload();
+            ModContent.GetInstance<PrimitiveSystem>().RegisterRenderTargetWithPalette("Electricity", "TidesOfTime/Assets/Palettes/Electricity");
         }
 
         public override IContentSource CreateDefaultContentSource()
