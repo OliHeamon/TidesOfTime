@@ -1,9 +1,12 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Microsoft.CodeAnalysis.CSharp.Syntax;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using ReLogic.Content;
+using ReLogic.Utilities;
 using System;
 using System.Collections.Generic;
 using Terraria;
+using Terraria.Audio;
 using Terraria.DataStructures;
 using Terraria.Graphics.Effects;
 using Terraria.ID;
@@ -33,11 +36,33 @@ namespace TidesOfTime.Content.Projectiles.Summon
 
         private const int ArcWidth = 12;
 
-        private const int ArcCooldownDuration = 24;
-
-        private const int StrikeFrequency = 6;
+        private const int StrikeFrequency = 2;
 
         private static readonly Vector2 LightningOffset = new(32, 2);
+
+        private static readonly SoundStyle Ambience = new("TidesOfTime/Assets/Sounds/Projectiles/Summon/TeslaCoil_Hum")
+        {
+            IsLooped = true,
+            MaxInstances = 0
+        };
+
+        private static readonly SoundStyle Strike = new("TidesOfTime/Assets/Sounds/Projectiles/Summon/TeslaCoil_Strike")
+        {
+            PitchVariance = 0.1f,
+            Volume = 0.8f
+        };
+
+        private static readonly SoundStyle Extinguish = new("TidesOfTime/Assets/Sounds/Projectiles/Summon/TeslaCoil_Extinguish")
+        {
+            PitchVariance = 0.1f,
+            Volume = 0.8f
+        };
+
+        private static readonly SoundStyle Arcing = new("TidesOfTime/Assets/Sounds/Projectiles/Summon/TeslaCoil_Arcing")
+        {
+            IsLooped = true,
+            MaxInstances = 0
+        };
 
         private float Target
         {
@@ -61,13 +86,15 @@ namespace TidesOfTime.Content.Projectiles.Summon
 
         private float arcOffset;
 
-        private int cooldownTimer;
-
         private readonly List<TrailInfo> trails;
 
         private readonly List<TrailInfo> lighterTrails;
 
-        private int oldTarget;
+        private SlotId soundSlot;
+
+        private int oldTrailCount;
+
+        private int timeArcsHaveExisted;
 
         public TeslaCoil()
         {
@@ -78,12 +105,12 @@ namespace TidesOfTime.Content.Projectiles.Summon
                 lightningTrail = new Trail(Main.graphics.GraphicsDevice, LightningMaxPoints, new TriangularTip(ArcWidth), factor => factor == 0 ? 0 : ArcWidth, texCoords => Color.White);
 
                 lighterTrail = new Trail(Main.graphics.GraphicsDevice, LightningMaxPoints, new TriangularTip(ArcWidth), factor => factor == 0 ? 0 : ArcWidth, texCoords => Color.Pink);
-
-                curve = new BezierCurve(new Vector2[3]);
-
-                trails = new List<TrailInfo>();
-                lighterTrails = new List<TrailInfo>();
             }
+
+            curve = new BezierCurve(new Vector2[3]);
+
+            trails = new List<TrailInfo>();
+            lighterTrails = new List<TrailInfo>();
         }
 
         public override void SetDefaults()
@@ -151,93 +178,88 @@ namespace TidesOfTime.Content.Projectiles.Summon
                 Projectile.netUpdate = true;
             }
 
-            trails.Clear();
-            lighterTrails.Clear();
-
-            int adjacentCoils = 1;
-
-            if (Target != -1)
+            if (Main.GameUpdateCount % StrikeFrequency == 0)
             {
-                cooldownTimer = 0;
+                trails.Clear();
+                lighterTrails.Clear();
 
-                // Trails for the main target.
-                for (int i = 0; i < 2; i++)
+                int adjacentCoils = 1;
+
+                if (Target != -1)
                 {
-                    Vector2 start = Projectile.position + LightningOffset;
-                    Vector2 end = Main.npc[(int)Target].Center;
-
-                    // On the second iteration it creates the same trails but in reverse - 2 trails overlapping provides a more chaotic look.
-                    if (i == 1)
+                    for (int i = 0; i < 2; i++)
                     {
-                        end = Projectile.position + LightningOffset;
-                        start = Main.npc[(int)Target].Center;
-                    }
+                        Vector2 start = Projectile.position + LightningOffset;
+                        Vector2 end = Main.npc[(int)Target].Center;
 
-                    Vector2[] targetTrail = ManageTrail(0, start, end, DistanceToTarget);
-                    Vector2[] lighterTargetTrail = ManageTrail(20, start, end, DistanceToTarget);
-
-                    trails.Add(new(targetTrail, end));
-                    lighterTrails.Add(new(lighterTargetTrail, end));
-                }
-            }
-
-            for (int i = 0; i < Main.maxProjectiles; i++)
-            {
-                Projectile projectile = Main.projectile[i];
-
-                if (projectile.active && projectile.type == Projectile.type && projectile.whoAmI != Projectile.whoAmI)
-                {
-                    float distance = Vector2.Distance(Projectile.Center, projectile.Center);
-
-                    if (distance < MaxRange)
-                    {
-                        // Trails to other tesla coils.
-                        Vector2[] targetTrail = ManageTrail(0, Projectile.position + LightningOffset, projectile.position + LightningOffset, distance);
-                        Vector2[] lighterTargetTrail = ManageTrail(20, Projectile.position + LightningOffset, projectile.position + LightningOffset, distance);
-
-                        trails.Add(new(targetTrail, projectile.position + LightningOffset));
-                        lighterTrails.Add(new(lighterTargetTrail, projectile.position + LightningOffset));
-
-                        adjacentCoils++;
-                    }
-                }
-            }
-
-            // Apply damage to enemies.
-            if (Main.netMode != NetmodeID.MultiplayerClient)
-            {
-                if (Main.GameUpdateCount % StrikeFrequency == 0)
-                {
-                    for (int i = 0; i < trails.Count; i++)
-                    {
-                        TrailInfo trailInfo = trails[i];
-
-                        for (int j = 0; j < trailInfo.Points.Length; j++)
+                        // On the second iteration it creates the same trails but in reverse - 2 trails overlapping provides a more chaotic look.
+                        if (i == 1)
                         {
-                            Projectile.NewProjectile(Projectile.GetSource_FromThis(), trailInfo.Points[j], Vector2.Zero,
-                                ModContent.ProjectileType<TeslaCoilDamageProjectile>(), Projectile.damage * adjacentCoils, 0, Projectile.owner);
+                            end = Projectile.position + LightningOffset;
+                            start = Main.npc[(int)Target].Center;
+                        }
+
+                        Vector2[] targetTrail = ManageTrail(0, start, end, DistanceToTarget);
+                        Vector2[] lighterTargetTrail = ManageTrail(20, start, end, DistanceToTarget);
+
+                        trails.Add(new(targetTrail, end));
+                        lighterTrails.Add(new(lighterTargetTrail, end));
+                    }
+                }
+
+                for (int i = 0; i < Main.maxProjectiles; i++)
+                {
+                    Projectile projectile = Main.projectile[i];
+
+                    if (projectile.active && projectile.type == Projectile.type && projectile.whoAmI != Projectile.whoAmI)
+                    {
+                        float distance = Vector2.Distance(Projectile.Center, projectile.Center);
+
+                        if (distance < MaxRange)
+                        {
+                            // Trails to other tesla coils.
+                            Vector2[] targetTrail = ManageTrail(0, Projectile.position + LightningOffset, projectile.position + LightningOffset, distance);
+                            Vector2[] lighterTargetTrail = ManageTrail(20, Projectile.position + LightningOffset, projectile.position + LightningOffset, distance);
+
+                            trails.Add(new(targetTrail, projectile.position + LightningOffset));
+                            lighterTrails.Add(new(lighterTargetTrail, projectile.position + LightningOffset));
+
+                            adjacentCoils++;
+                        }
+                    }
+                }
+
+                // Apply damage to enemies.
+                if (Main.netMode != NetmodeID.MultiplayerClient)
+                {
+                    if (Main.GameUpdateCount % StrikeFrequency == 0)
+                    {
+                        for (int i = 0; i < trails.Count; i++)
+                        {
+                            TrailInfo trailInfo = trails[i];
+
+                            for (int j = 0; j < trailInfo.Points.Length; j++)
+                            {
+                                Projectile.NewProjectile(Projectile.GetSource_FromThis(), trailInfo.Points[j], Vector2.Zero,
+                                    ModContent.ProjectileType<TeslaCoilDamageProjectile>(), Projectile.damage * adjacentCoils, 0, Projectile.owner);
+                            }
                         }
                     }
                 }
             }
 
-            if (cooldownTimer < ArcCooldownDuration)
+            ManageSound();
+
+            if (trails.Count > 0)
             {
-                cooldownTimer++;
+                timeArcsHaveExisted++;
+            }
+            else
+            {
+                timeArcsHaveExisted = 0;
             }
 
-            // A target was just acquired.
-            if (oldTarget == -1 && Target != -1)
-            {
-
-            }
-            // A target was just lost.
-            else if (Target == -1 && oldTarget != -1)
-            {
-
-            }
-
-            oldTarget = (int)Target;
+            oldTrailCount = trails.Count;
         }
 
         private Vector2[] ManageTrail(int offset, Vector2 start, Vector2 end, float distance)
@@ -350,7 +372,7 @@ namespace TidesOfTime.Content.Projectiles.Summon
                         lightningTrail.Render(effect);
                     }
 
-                    effect.Parameters["opacity"].SetValue(0.8f);
+                    effect.Parameters["opacity"].SetValue(0.7f);
 
                     for (int i = 0; i < lighterTrails.Count; i++)
                     {
@@ -384,6 +406,62 @@ namespace TidesOfTime.Content.Projectiles.Summon
                     Lighting.AddLight(trailInfo.Points[j], Color.Lerp(Color.Pink, Color.Purple, Main.rand.NextFloat()).ToVector3());
                 }
             }
+        }
+
+        private void ManageSound()
+        {
+            if (!Main.dedServ)
+            {
+                // If there are any arcs active, play arc sound.
+                if (trails.Count > 0)
+                {
+                    // Tesla coil just started arcing.
+                    if (oldTrailCount == 0)
+                    {
+                        SoundEngine.PlaySound(Strike, Projectile.position + LightningOffset);
+                    }
+                    
+                    // Plays the arcing sound if the arc has been there a few ticks, as if the arc is there for a very short period of time it's not preferable to play the main sound.
+                    if (timeArcsHaveExisted > 10)
+                    {
+                        if (!SoundEngine.TryGetActiveSound(soundSlot, out var _))
+                        {
+                            ProjectileAudioTracker tracker = new(Projectile);
+
+                            soundSlot = SoundEngine.PlaySound(Arcing, Projectile.position + LightningOffset, soundInstance => ActiveCallback(tracker, soundInstance));
+                        }
+                    }
+                }
+                // If none, only play ambience.
+                else
+                {
+                    if (oldTrailCount != 0)
+                    {
+                        SoundEngine.PlaySound(Extinguish, Projectile.position + LightningOffset);
+                    }
+
+                    if (!SoundEngine.TryGetActiveSound(soundSlot, out var _))
+                    {
+                        ProjectileAudioTracker tracker = new(Projectile);
+
+                        soundSlot = SoundEngine.PlaySound(Ambience, Projectile.position + LightningOffset, soundInstance => AmbienceCallback(tracker, soundInstance));
+                    }
+                }
+            }
+        }
+
+        private bool AmbienceCallback(ProjectileAudioTracker tracker, ActiveSound soundInstance)
+        {
+            soundInstance.Position = Projectile.position + LightningOffset;
+
+            return tracker.IsActiveAndInGame() && trails.Count == 0;
+        }
+
+        private bool ActiveCallback(ProjectileAudioTracker tracker, ActiveSound soundInstance)
+        {
+            soundInstance.Position = Projectile.position + LightningOffset;
+
+            return tracker.IsActiveAndInGame() && trails.Count > 0;
         }
 
         private struct TrailInfo
