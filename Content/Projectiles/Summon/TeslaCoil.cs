@@ -122,7 +122,8 @@ namespace TidesOfTime.Content.Projectiles.Summon
 
             Projectile.tileCollide = false;
 
-            Projectile.timeLeft = 60 * 60 * 3;
+            // Lasts 1 minute.
+            Projectile.timeLeft = 60 * 60;
 
             Projectile.DamageType = DamageClass.Summon;
         }
@@ -391,6 +392,14 @@ namespace TidesOfTime.Content.Projectiles.Summon
             }
 
             return base.PreDraw(ref lightColor);
+        }
+
+        public override void Kill(int timeLeft)
+        {
+            if (SoundEngine.TryGetActiveSound(soundSlot, out var activeSound))
+            {
+                activeSound.Stop();
+            }
         }
 
         private void ManageLight()
