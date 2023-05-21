@@ -22,6 +22,11 @@ Items: {
 		DisplayName: Mountain Climber Hairpin
 		Tooltip: '''"Let's climb out of here together."'''
 	}
+
+	SteamThrower: {
+		DisplayName: Steam Thrower
+		Tooltip: ""
+	}
 }
 
 Projectiles: {
