@@ -251,9 +251,12 @@ namespace TidesOfTime.Common.Rendering
             if (Positions == null && !(primitives?.IsDisposed ?? true))
                 return;
 
-            SetupMeshes();
+            if (!primitives.IsDisposed)
+            {
+                SetupMeshes();
 
-            primitives.Render(effect);
+                primitives.Render(effect);
+            }
         }
 
         public void Dispose()

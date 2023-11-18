@@ -37,7 +37,10 @@ namespace TidesOfTime.Common.Rendering
 
             foreach (RenderingStepData data in renderData.Values)
             {
-                data.RenderTarget.Dispose();
+                Main.QueueMainThreadAction(() =>
+                {
+                    data.RenderTarget.Dispose();
+                });
             }
         }
 
@@ -111,10 +114,24 @@ namespace TidesOfTime.Common.Rendering
         }
 
         /// <summary>
+        /// Registers a rendertarget for use with a drawing action or list of drawing actions.
+        /// </summary>
+        /// <param name="id">ID of the rendertarget and its layer.</param>
+        public void RegisterRenderTarget(string id)
+        {
+            Main.QueueMainThreadAction(() =>
+            {
+                Palette palette = new();
+
+                renderData[id] = new RenderingStepData(palette);
+            });
+        }
+
+        /// <summary>
         /// Registers a rendertarget for use with a drawing action or list of drawing actions. This is used so that all draw calls of a needed palette can be done with a single RT.
         /// </summary>
         /// <param name="id">ID of the rendertarget and its layer.</param>
-        /// <param name="palette">The given palette.</param>
+        /// <param name="palettePath">The given palette's texture path.</param>
         public void RegisterRenderTargetWithPalette(string id, string palettePath)
         {
             Main.QueueMainThreadAction(() =>

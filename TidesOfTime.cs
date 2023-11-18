@@ -1,3 +1,4 @@
+using Microsoft.Xna.Framework;
 using ReLogic.Content.Sources;
 using System.Reflection;
 using Terraria.ModLoader;
@@ -10,6 +11,10 @@ namespace TidesOfTime
 	{
         public static TidesOfTime Instance { get; private set; }
 
+        public static readonly Color FuturisticBackgroundColor = new Color(34, 31, 38) * 0.875f;
+
+        public static readonly Color FuturisticButtonColor = new Color(34, 31, 38) * 0.875f;
+
         public TidesOfTime()
         {
             Instance = this;
@@ -17,6 +22,7 @@ namespace TidesOfTime
 
         public override void PostSetupContent()
         {
+            ModContent.GetInstance<PrimitiveSystem>().RegisterRenderTarget("Standard");
             ModContent.GetInstance<PrimitiveSystem>().RegisterRenderTargetWithPalette("Electricity", "TidesOfTime/Assets/Palettes/Electricity");
         }
 
@@ -24,7 +30,7 @@ namespace TidesOfTime
         {
             TmodFile file = typeof(Mod).GetProperty("File", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(this, null) as TmodFile;
 
-            return new TidesOfTimeContentSource(file);
+            return new TidesOfTimeContentLoader(file);
         }
     }
 }

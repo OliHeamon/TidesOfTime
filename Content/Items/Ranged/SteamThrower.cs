@@ -1,4 +1,5 @@
-﻿using Terraria;
+﻿using Microsoft.Xna.Framework;
+using Terraria;
 using Terraria.ID;
 using Terraria.ModLoader;
 using TidesOfTime.Content.Rarities;
@@ -28,6 +29,11 @@ namespace TidesOfTime.Content.Items.Ranged
             Item.shootSpeed = 10;
 
             Item.value = Item.sellPrice(gold: 5);
+        }
+
+        public override Vector2? HoldoutOffset()
+        {
+            return new Vector2(-12, 4);
         }
     }
 }

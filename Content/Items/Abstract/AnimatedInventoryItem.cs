@@ -26,14 +26,14 @@ namespace TidesOfTime.Content.Items.Abstract
 
         public override bool PreDrawInInventory(SpriteBatch spriteBatch, Vector2 position, Rectangle frame, Color drawColor, Color itemColor, Vector2 origin, float scale)
         {
-            TidesOfTimeUtils.DrawAnimatedTexture(inventoryTexture, FrameCount, TicksPerFrame, position, drawColor, origin, scale);
+            TidesOfTimeUtils.DrawAnimatedTexture(inventoryTexture, FrameCount, TicksPerFrame, position, drawColor, origin, new(scale), SpriteEffects.None);
 
             return false;
         }
 
         public override bool PreDrawInWorld(SpriteBatch spriteBatch, Color lightColor, Color alphaColor, ref float rotation, ref float scale, int whoAmI)
         {
-            TidesOfTimeUtils.DrawAnimatedTexture(inventoryTexture, FrameCount, TicksPerFrame, Item.position - Main.screenPosition, lightColor, Vector2.Zero, scale);
+            TidesOfTimeUtils.DrawAnimatedTexture(inventoryTexture, FrameCount, TicksPerFrame, Item.position - Main.screenPosition, lightColor, Vector2.Zero, new(scale), SpriteEffects.None);
 
             return false;
         }

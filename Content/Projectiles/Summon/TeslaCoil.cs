@@ -1,5 +1,4 @@
-﻿using Microsoft.CodeAnalysis.CSharp.Syntax;
-using Microsoft.Xna.Framework;
+﻿using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using ReLogic.Content;
 using ReLogic.Utilities;
@@ -350,7 +349,7 @@ namespace TidesOfTime.Content.Projectiles.Summon
         {
             if (trails.Count > 0 && !Main.dedServ)
             {
-                TidesOfTimeUtils.DrawAnimatedTexture(activeTexture, FrameCount, TicksPerFrame, Projectile.position - Main.screenPosition, lightColor, Vector2.Zero, 1);
+                TidesOfTimeUtils.DrawAnimatedTexture(activeTexture, FrameCount, TicksPerFrame, Projectile.position - Main.screenPosition, lightColor, Vector2.Zero, Vector2.One, SpriteEffects.None);
 
                 ModContent.GetInstance<PrimitiveSystem>().QueueRenderAction("Electricity", () =>
                 {

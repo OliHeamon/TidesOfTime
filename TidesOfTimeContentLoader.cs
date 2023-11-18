@@ -9,11 +9,11 @@ using Terraria;
 
 namespace TidesOfTime
 {
-    public class TidesOfTimeContentSource : ContentSource
+    public class TidesOfTimeContentLoader : ContentSource
     {
         private readonly TmodFile file;
 
-        public TidesOfTimeContentSource(TmodFile file)
+        public TidesOfTimeContentLoader(TmodFile file)
         {
             ArgumentNullException.ThrowIfNull(file);
 

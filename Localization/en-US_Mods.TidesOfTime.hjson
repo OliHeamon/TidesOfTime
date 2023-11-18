@@ -4,7 +4,7 @@ Items: {
 		Tooltip:
 			'''
 			Summons a tesla coil to fry enemies in a large area
-			Multiple tesla coils can arc to each other to increase their range and damage
+			Multiple tesla coils can arc to each other to increase their damage
 			'''
 	}
 
@@ -27,10 +27,132 @@ Items: {
 		DisplayName: Steam Thrower
 		Tooltip: ""
 	}
+
+	UniversalRemote: {
+		DisplayName: Universal Remote
+		Tooltip:
+			'''
+			While in the user's inventory, three worker drones will fly around the player
+			Using the item allows the drones to be programmed with tasks
+			'''
+	}
 }
 
 Projectiles: {
 	TeslaCoil.DisplayName: Tesla Coil
-	DamageProjectile.DisplayName: Damage Projectile
-	TeslaCoilDamageProjectile.DisplayName: Tesla Coil Damage Projectile
+	TeslaCoilDamageProjectile.DisplayName: 300 kilovolts
+	BreakerDrone.DisplayName: Breaker Drone
+	BuilderDrone.DisplayName: Builder Drone
+	ScannerDrone.DisplayName: Scanner Drone
+}
+
+GUI: {
+	UniversalRemote: {
+		Tasks: Drone Tasks:
+		NoTasks: 404: No Tasks Found!
+		TaskQueued: Waiting...
+		EmergencyStop: Abort task? (Cannot be undone!)
+		Assignment: Assignment:
+		CheckSelectionButton: Assign task? (Block placement will replace blocks in the world!)
+		ExitSelectionButton: Exit task selection menu?
+		ExitMenuButton: Exit drone window?
+		SlotInfo:
+			'''
+			Once an area is selected, the builder drone requires blocks to be inserted into this slot.
+			When ready, assigning the task will take the amount it needs.
+			The task will not be assignable until this slot contains enough blocks.
+			'''
+		InsertBlock: No blocks inserted!
+		TooManyBlocks: Invalid: Selection area contains more than 9999 blocks!
+		ScannerSpelunkerPulse:
+			'''
+			Spelunker Pulse:
+			Reveals ores in a medium-sized radius around the scanner drone.
+			'''
+		ScannerHunterPulse:
+			'''
+			Hunter Pulse:
+			Reveals enemies in a medium-sized radius around the scanner drone.
+			'''
+		ScannerSensorArray:
+			'''
+			Sensor Array:
+			Grants the effects of several information accessories to the user.
+			This ability is always passively enabled when the scanner drone is online.
+			'''
+		ScannerSpotlight:
+			'''
+			Spotlight:
+			When enabled, the scanner drone will shine a bright light in the cursor's direction.
+			'''
+		ScannerEvilPulse:
+			'''
+			Evil Pulse:
+			Reveals world evil blocks in a medium-sized radius around the scanner drone.
+			'''
+		ScannerSpelunkerPulseTaskInfo: Search for valuable blocks nearby.
+		ScannerHunterPulseTaskInfo: Search for threats to the user nearby.
+		ScannerEvilPulseTaskInfo: Search for threats to the world nearby.
+		BuilderRectangleOutline:
+			'''
+			Build Rectangle:
+			Constructs a rectangular outline of a given block.
+			'''
+		BuilderRectangleFill:
+			'''
+			Build Filled Rectangle:
+			Constructs and fills a rectangle of a given block.
+			'''
+		BuilderCircleOutline:
+			'''
+			Build Circle Outline:
+			Constructs a circular outline of a given block.
+			'''
+		BuilderCircleFill:
+			'''
+			Build Filled Circle:
+			Constructs and fills a circle of a given block.
+			'''
+		BuilderStamp:
+			'''
+			Build Stamp:
+			Allows the user to draw a customised shape, which can then be built into the world.
+			'''
+		BreakerRectangle:
+			'''
+			Break Rectangle:
+			Destroys all tiles (non-liquid) in the selected rectangle.
+			'''
+		BreakerCircle:
+			'''
+			Break Circle:
+			Destroys all tiles (non-liquid) in the circle contained in the selected rectangle.
+			'''
+		BreakerLiquidVacuum:
+			'''
+			Vacuum Liquid:
+			Removes all liquid in the selected rectangle.
+			'''
+		BreakerModeSwitch:
+			'''
+			Wall Mode:
+			If this button is toggled on, walls will also be broken as well as tiles.
+			'''
+		BreakerClentaminate:
+			'''
+			Clentaminator:
+			Purifies all blocks in the selected rectangle.
+			'''
+		BuilderRectanglePlacementInfo: Build a rectangle of {0} blocks of {1}!
+		BuilderCirclePlacementInfo: Build a circle of {0} blocks of {1}!
+		BuilderStampPlacementInfo: Build a custom stamp of {0} blocks of {1}!
+		BreakRectangleInfo: Destroy a {0} by {1} area of blocks...
+		BreakCircleInfo: Destroy a circle {0} blocks wide...
+		SelectionArea: Selected area size: {0}x{1} blocks
+		ResetGrid: Reset stamp?
+		Eraser: Click to switch to eraser mode
+		SmallBrush: Small brush (1x1)
+		MediumBrush: Medium brush (3x3)
+		LargeBrush: Large brush (5x5)
+	}
 }
