@@ -92,7 +92,7 @@ namespace TidesOfTime.Common.Rendering
                     paletteCorrection.Parameters["colorCount"].SetValue(palette.ColorCount);
                 }
 
-                Main.spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, SamplerState.PointClamp,
+                Main.spriteBatch.Begin(SpriteSortMode.Immediate, BlendState.AlphaBlend, SamplerState.PointWrap,
                     DepthStencilState.None, RasterizerState.CullNone, paletteCorrection, Main.GameViewMatrix.TransformationMatrix);
 
                 Main.spriteBatch.Draw(renderData[id].RenderTarget, new Rectangle(0, 0, Main.screenWidth, Main.screenHeight), Color.White);

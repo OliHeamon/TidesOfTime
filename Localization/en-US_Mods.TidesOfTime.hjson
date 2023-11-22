@@ -36,6 +36,11 @@ Items: {
 			Using the item allows the drones to be programmed with tasks
 			'''
 	}
+
+	ProceduralGoreTestItem: {
+		DisplayName: Procedural Gore Test Item
+		Tooltip: ""
+	}
 }
 
 Projectiles: {

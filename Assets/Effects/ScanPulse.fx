@@ -1,7 +1,5 @@
 matrix transformMatrix;
 
-float opacity;
-
 struct VertexShaderInput
 {
     float4 Position : POSITION;
@@ -34,7 +32,7 @@ float4 PixelShaderFunction(VertexShaderOutput input) : COLOR0
 
 technique Technique1
 {
-    pass TeslaCoilLightningPass
+    pass ScanPulsePass
     {
         VertexShader = compile vs_2_0 VertexShaderFunction();
         PixelShader = compile ps_2_0 PixelShaderFunction();

@@ -1,9 +1,12 @@
 using Microsoft.Xna.Framework;
 using ReLogic.Content.Sources;
 using System.Reflection;
+using Terraria;
+using Terraria.ID;
 using Terraria.ModLoader;
 using Terraria.ModLoader.Core;
 using TidesOfTime.Common.Rendering;
+using TidesOfTime.Common.Rendering.ProceduralGore;
 
 namespace TidesOfTime
 {
@@ -31,6 +34,28 @@ namespace TidesOfTime
             TmodFile file = typeof(Mod).GetProperty("File", BindingFlags.NonPublic | BindingFlags.Instance).GetValue(this, null) as TmodFile;
 
             return new TidesOfTimeContentLoader(file);
+        }
+    }
+
+    public class ProceduralGoreTestItem : ModItem
+    {
+        public override string Texture => "TidesOfTime/Assets/Invisible";
+
+        public override void SetDefaults()
+        {
+            Item.useStyle = ItemUseStyleID.HoldUp;
+            Item.useAnimation = 15;
+            Item.useTime = 15;
+        }
+
+        public override bool? UseItem(Player player)
+        {
+            NPC npc = new();
+            npc.SetDefaults(/*Main.rand.Next(NPCLoader.NPCCount)*/491);
+
+            ModContent.GetInstance<ProceduralGoreSystem>().AddGore(npc, Main.MouseWorld, DivisionType.RandomQuads);
+
+            return true;
         }
     }
 }

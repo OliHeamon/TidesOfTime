@@ -21,6 +21,8 @@ namespace TidesOfTime.Content.Players
 
         public override void PostUpdateMiscEffects()
         {
+            UniversalRemoteUI universalRemoteUI = TidesOfTimeUILoader.GetUIState<UniversalRemoteUI>();
+
             int remoteType = ModContent.ItemType<UniversalRemote>();
 
             bool hasRemote = !Player.dead && (Player.HasItem(remoteType) || Main.mouseItem.type == remoteType);
@@ -51,9 +53,9 @@ namespace TidesOfTime.Content.Players
                     {
                         bool visible = TidesOfTimeUILoader.GetUIState<UniversalRemoteUI>().Visible;
 
-                        TidesOfTimeUILoader.GetUIState<UniversalRemoteUI>().TaskSelector.ResetToggles();
-                        TidesOfTimeUILoader.GetUIState<UniversalRemoteUI>().TaskList.RemoveAllTasks();
-                        TidesOfTimeUILoader.GetUIState<UniversalRemoteUI>().Visible = false;
+                        universalRemoteUI.TaskSelector.ResetToggles();
+                        universalRemoteUI.TaskList.RemoveAllTasks();
+                        universalRemoteUI.Visible = false;
 
                         if (visible)
                         {

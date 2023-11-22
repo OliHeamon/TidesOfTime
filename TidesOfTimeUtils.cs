@@ -70,5 +70,7 @@ namespace TidesOfTime
         }
 
         public static int UniquePair(int a, int b) => (int)((0.5 * (a + b) * (a + b + 1)) + b);
+
+        public static Vector2 Truncate(this Vector2 vector) => new((int)vector.X, (int)vector.Y);
     }
 }
